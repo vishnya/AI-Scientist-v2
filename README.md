@@ -158,3 +158,9 @@ This error typically occurs when the AI Scientist-v2 attempts to load or run a m
 ## Acknowledgement
 
 The tree search component implemented within the `ai_scientist` directory is built on top of the [AIDE](https://github.com/WecoAI/aideml) project. We thank the AIDE developers for their valuable contributions and for making their work publicly available.
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=SakanaAI/AI-Scientist-v2&type=Date)](https://star-history.com/#SakanaAI/AI-Scientist-v2&Date)
+
