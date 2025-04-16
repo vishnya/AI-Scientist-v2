@@ -153,12 +153,11 @@ Once the initial experimental stage is complete, you will find a timestamped log
 If you use **The AI Scientist-v2** in your research, please cite our work as follows:
 
 ```bibtex
-@misc{aiscientist_v2,
- title = {The {AI} Scientist-v2: Workshop-Level Automated Scientific Discovery via Agentic Tree Search},
- author = {Yamada, Yutaro and Lange, Robert Tjarko and Lu, Cong and Hu, Shengran and Foerster, Jakob and Clune, Jeff and Ha, David},
- year = {2025},
- month = {April},
- howpublished = {Sakana AI Blog Post. Available online: \url{https://pub.sakana.ai/ai-scientist-v2/paper}},
+@article{aiscientist_v2,
+  title={The AI Scientist-v2: Workshop-Level Automated Scientific Discovery via Agentic Tree Search},
+  author={Yamada, Yutaro and Lange, Robert Tjarko and Lu, Cong and Hu, Shengran and Lu, Chris and Foerster, Jakob and Clune, Jeff and Ha, David},
+  journal={arXiv preprint arXiv:2504.08066},
+  year={2025}
 }
 ```
 
