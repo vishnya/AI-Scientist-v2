@@ -132,7 +132,7 @@ Key tree search configuration parameters in `bfts_config.yaml`:
     -   `debug_prob`: The probability of attempting to debug a failing node.
     -   `num_drafts`: The number of initial root nodes (i.e., the number of independent trees to grow) during Stage 1.
 
-Example command to run AI-Scientist-v2 using a generated idea file (e.g., `my_research_topic.json`). Please review `bfts_config.yaml` for detailed tree search parameters (the default config includes `claude-3-5-sonnet` for experiments).
+Example command to run AI-Scientist-v2 using a generated idea file (e.g., `my_research_topic.json`). Please review `bfts_config.yaml` for detailed tree search parameters (the default config includes `claude-3-5-sonnet` for experiments). Do not set `load_code` if you do not want to initialize experimentation with a code snippet.
 
 ```bash
 python launch_scientist_bfts.py \
