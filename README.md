@@ -30,10 +30,11 @@ This system autonomously generates hypotheses, runs experiments, analyzes data, 
 1.  [Requirements](#requirements)
     *   [Installation](#installation)
     *   [Supported Models and API Keys](#supported-models-and-api-keys)
-2.  [Run AI Scientist-v2 Paper Generation Experiments](#run-ai-scientist-v2-paper-generation-experiments)
-3.  [Citing The AI Scientist-v2](#citing-the-ai-scientist-v2)
-4.  [Frequently Asked Questions](#frequently-asked-questions)
-5.  [Acknowledgement](#acknowledgement)
+2.  [Generate Research Ideas](#generate-research-ideas)
+3.  [Run AI Scientist-v2 Paper Generation Experiments](#run-ai-scientist-v2-paper-generation-experiments)
+4.  [Citing The AI Scientist-v2](#citing-the-ai-scientist-v2)
+5.  [Frequently Asked Questions](#frequently-asked-questions)
+6.  [Acknowledgement](#acknowledgement)
 
 ## Requirements
 
@@ -73,7 +74,7 @@ Next, configure valid [AWS Credentials](https://docs.aws.amazon.com/cli/v1/userg
 
 #### Semantic Scholar API (Literature Search)
 
-Our code can optionally use a Semantic Scholar API Key (`S2_API_KEY`) for higher throughput during literature search [if you have one](https://www.semanticscholar.org/product/api). However, the system should work without it, though you might encounter rate limits. If you experience issues with Semantic Scholar, you can skip the literature search and citation phases during paper generation.
+Our code can optionally use a Semantic Scholar API Key (`S2_API_KEY`) for higher throughput during literature search [if you have one](https://www.semanticscholar.org/product/api). This is used during both the ideation and paper writing stages. The system should work without it, though you might encounter rate limits or reduced novelty checking during ideation. If you experience issues with Semantic Scholar, you can skip the citation phase during paper generation.
 
 #### Setting API Keys
 
@@ -87,9 +88,37 @@ export S2_API_KEY="YOUR_S2_KEY_HERE"
 # export AWS_REGION_NAME="your-aws-region"
 ```
 
+## Generate Research Ideas
+
+Before running the full AI Scientist-v2 experiment pipeline, you first use the `ai_scientist/perform_ideation_temp_free.py` script to generate potential research ideas. This script uses an LLM to brainstorm and refine ideas based on a high-level topic description you provide, interacting with tools like Semantic Scholar to check for novelty.
+
+1.  **Prepare a Topic Description:** Create a Markdown file (e.g., `my_research_topic.md`) describing the research area or theme you want the AI to explore. This file should contain sections like `Title`, `Keywords`, `TL;DR`, and `Abstract` to define the scope of the research. Refer to the example file `ai_scientist/ideas/i_cant_believe_its_not_better.md` for the expected structure and content format. Place your file in a location accessible by the script (e.g., the `ai_scientist/ideas/` directory).
+
+2.  **Run the Ideation Script:** Execute the script from the main project directory, pointing it to your topic description file and specifying the desired LLM.
+
+    ```bash
+    python ai_scientist/perform_ideation_temp_free.py \
+     --workshop-file "ai_scientist/ideas/my_research_topic.md" \
+     --model gpt-4o-2024-05-13 \
+     --max-num-generations 20 \
+     --num-reflections 5
+    ```
+    *   `--workshop-file`: Path to your topic description Markdown file.
+    *   `--model`: The LLM to use for generating ideas (ensure you have the corresponding API key set).
+    *   `--max-num-generations`: How many distinct research ideas to attempt generating.
+    *   `--num-reflections`: How many refinement steps the LLM should perform for each idea.
+
+3.  **Output:** The script will generate a JSON file named after your input Markdown file (e.g., `ai_scientist/ideas/my_research_topic.json`). This file will contain a list of structured research ideas, including hypotheses, proposed experiments, and related work analysis.
+
+4.  **Proceed to Experiments:** Once you have the generated JSON file containing research ideas, you can proceed to the next section to run the experiments.
+
+This ideation step guides the AI Scientist towards specific areas of interest and produces concrete research directions to be tested in the main experimental pipeline.
+
 ## Run AI Scientist-v2 Paper Generation Experiments
 
-You can specify the models used for the write-up and review phases via command-line arguments.
+Using the JSON file generated in the previous ideation step, you can now launch the main AI Scientist-v2 pipeline. This involves running experiments via agentic tree search, analyzing results, and generating a paper draft.
+
+Specify the models used for the write-up and review phases via command-line arguments.
 The configuration for the best-first tree search (BFTS) is located in `bfts_config.yaml`. Adjust parameters in this file as needed.
 
 Key tree search configuration parameters in `bfts_config.yaml`:
@@ -103,11 +132,11 @@ Key tree search configuration parameters in `bfts_config.yaml`:
     -   `debug_prob`: The probability of attempting to debug a failing node.
     -   `num_drafts`: The number of initial root nodes (i.e., the number of independent trees to grow) during Stage 1.
 
-Example command to run AI-Scientist-v2 on one of the provided ideas (`i_cant_believe_its_not_better.json`). Please review `bfts_config.yaml` for detailed tree search parameters (the default config includes `claude-3-5-sonnet` for experiments).
+Example command to run AI-Scientist-v2 using a generated idea file (e.g., `my_research_topic.json`). Please review `bfts_config.yaml` for detailed tree search parameters (the default config includes `claude-3-5-sonnet` for experiments).
 
 ```bash
 python launch_scientist_bfts.py \
- --load_ideas "ai_scientist/ideas/i_cant_believe_its_not_better.json" \
+ --load_ideas "ai_scientist/ideas/my_research_topic.json" \
  --load_code \
  --add_dataset_ref \
  --model_writeup o1-preview-2024-09-12 \
@@ -117,7 +146,7 @@ python launch_scientist_bfts.py \
  --num_cite_rounds 20
 ```
 
-Once Stage 1 is complete, you will find a timestamped log folder inside the `experiments/` directory. Navigate to `experiments/"timestamp_ideaname"/logs/0-run/` within that folder to find the tree visualization file `unified_tree_viz.html`.
+Once the initial experimental stage is complete, you will find a timestamped log folder inside the `experiments/` directory. Navigate to `experiments/"timestamp_ideaname"/logs/0-run/` within that folder to find the tree visualization file `unified_tree_viz.html`.
 
 ## Citing The AI Scientist-v2
 
@@ -141,11 +170,11 @@ The AI Scientist-v2 completes experiments with a success rate that depends on th
 
 **What is the estimated cost per experiment?**
 
-Using Claude 3.5 Sonnet for the experimentation phase typically costs around $15–$20 per run. The subsequent writing phase adds approximately $5 when using the default models specified in the example command. Using GPT-4o for `model_citation` is recommended as it can help reduce writing costs.
+The ideation step cost depends on the LLM used and the number of generations/reflections, but is generally low (a few dollars). For the main experiment pipeline, using Claude 3.5 Sonnet for the experimentation phase typically costs around $15–$20 per run. The subsequent writing phase adds approximately $5 when using the default models specified in the example command. Using GPT-4o for `model_citation` is recommended as it can help reduce writing costs.
 
 **How do I run The AI Scientist-v2 for different subject fields?**
 
-You can add a new JSON file to the `ai_scientist/ideas/` directory. For reference, take a look at the example: `ai_scientist/ideas/i_cant_believe_its_not_better.json`.
+First, perform the [Generate Research Ideas](#generate-research-ideas) step. Create a new Markdown file describing your desired subject field or topic, following the structure of the example `ai_scientist/ideas/i_cant_believe_its_not_better.md`. Run the `perform_ideation_temp_free.py` script with this file to generate a corresponding JSON idea file. Then, proceed to the [Run AI Scientist-v2 Paper Generation Experiments](#run-ai-scientist-v2-paper-generation-experiments) step, using this JSON file with the `launch_scientist_bfts.py` script via the `--load_ideas` argument.
 
 **What should I do if I have problems accessing the Semantic Scholar API?**
 
@@ -153,7 +182,7 @@ The Semantic Scholar API is used to assess the novelty of generated ideas and to
 
 **I encountered a "CUDA Out of Memory" error. What can I do?**
 
-This error typically occurs when the AI Scientist-v2 attempts to load or run a model that requires more GPU memory than available on your system. To resolve this, you can try updating your idea's JSON file (`ai_scientist/ideas/your_idea.json`) to suggest using a smaller model for the experiments or analysis.
+This error typically occurs when the AI Scientist-v2 attempts to load or run a model that requires more GPU memory than available on your system. To resolve this, you can try updating your ideation prompt file (`ai_scientist/ideas/my_research_topic.md`) to suggest using smaller models for the experiments.
 
 ## Acknowledgement
 
